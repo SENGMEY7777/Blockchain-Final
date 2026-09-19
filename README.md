@@ -4,24 +4,6 @@
 > Course: Blockchain Technology & Cryptography  
 > Group: **Group 3**
 
----
-
-## 👥 Group Members (Group 3)
-
-| No. | Full Name |
-|:---:|:---|
-| 1 | **Tep Panhasak** |
-| 2 | **Chan Lina** |
-| 3 | **Sambath Vylayhuoth** |
-| 4 | **Vann Sengmey** |
-| 5 | **Serey Sunteang** |
-| 6 | **Ro Nali** |
-| 7 | **Sol Visal** |
-| 8 | **Sorm ChanSokheng** |
-| 9 | **Thim Bunhuv** |
-
----
-
 ## 📌 Project Overview
 
 This project implements a complete, enterprise-grade **Merkle Tree Integrity Checker** in Java 21 conforming strictly to Blockchain cryptographic standards.
