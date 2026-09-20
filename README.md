@@ -64,99 +64,18 @@ Final-Blockchai/
 
 ---
 
-## 🔄 Data Flow Diagrams (DFD)
+## 🔄 Data Flow Diagram (DFD Level 1)
 
-### 1. DFD Level 0 — Context Diagram
-The Context Diagram illustrates the system boundary of the Merkle Tree Integrity Checker and its primary interactions with the external user/client.
+The following diagram illustrates the detailed data flow between the user, in-memory data stores, and the 5 core system processes:
 
-```mermaid
-flowchart LR
-    User["👤 User / Client"]
+![Merkle Tree Integrity Checker — Data Flow Diagram](docs/dfd_diagram.png)
 
-    subgraph System["Merkle Tree Integrity Checker System"]
-        Core["0.0<br/>Merkle Tree<br/>Integrity Checker Engine"]
-    end
-
-    User -->|"1. Raw Transactions (digits, &ge;8)"| Core
-    User -->|"2. Target Leaf Index for Proof"| Core
-    User -->|"3. Tampered Value for Testing"| Core
-    User -->|"4. Execution Choices (0 - 5)"| Core
-
-    Core -->|"A. Validated Transactions Table"| User
-    Core -->|"B. Layer-by-Layer Tree & Merkle Root"| User
-    Core -->|"C. Sibling Audit Path (Merkle Proof)"| User
-    Core -->|"D. Verification Verdict (PASS / FAIL)"| User
-    Core -->|"E. Tamper Alert & Root Divergence Report"| User
-```
-
-### 2. DFD Level 1 — Detailed Process Decomposition Diagram
-The Level 1 Diagram decomposes the system into 5 primary processes, illustrating how data moves between transformation logic and in-memory data stores (`D1`, `D2`).
-
-```mermaid
-flowchart TD
-    User["👤 User / Client"]
-
-    subgraph P1["1.0 Input & Validation Engine"]
-        V["1.1 Validate Digits Regex<br/>^[0-9]+$ & Count &ge; 8"]
-    end
-
-    subgraph Stores["In-Memory Data Stores"]
-        D1[("D1: Transactions List")]
-        D2[("D2: Merkle Tree Layers & Root")]
-    end
-
-    subgraph P2["2.0 Tree Construction Engine"]
-        LH["2.1 Compute Leaf Hashes<br/>SHA-256(item)"]
-        ODD["2.2 Handle Odd Nodes<br/>Duplicate Last Node Protocol"]
-        PH["2.3 Pairwise Parent Hashing<br/>SHA-256(Left || Right)"]
-    end
-
-    subgraph P3["3.0 Merkle Proof Generation"]
-        GP["3.1 Extract Sibling Audit Path<br/>Assign Orientation 'L' or 'R'"]
-    end
-
-    subgraph P4["4.0 Cryptographic Proof Verification"]
-        VP["4.1 Recompute Branch Hashes<br/>Iterative Pairwise SHA-256"]
-        CMP["4.2 Compare vs Merkle Root<br/>recomputedRoot == rootHex"]
-    end
-
-    subgraph P5["5.0 Tamper Detection Engine"]
-        TP["5.1 Inject Modified Transaction<br/>Clone & Replace at Target Index"]
-        TR["5.2 Recalculate New Tree<br/>Compute tamperedRootHex"]
-        TC["5.3 Compare Roots<br/>originalRoot != tamperedRoot"]
-    end
-
-    %% Process 1.0 Flows
-    User -->|"Submit Transactions"| V
-    V -->|"Store Valid List"| D1
-    V -->|"Display Input Table"| User
-
-    %% Process 2.0 Flows
-    D1 -->|"Read Transactions"| LH
-    LH --> ODD
-    ODD --> PH
-    PH -->|"Store 2D Tree & Root"| D2
-    D2 -->|"Render Tree Visualization & Root"| User
-
-    %% Process 3.0 Flows
-    User -->|"Specify Leaf Index"| GP
-    D2 -->|"Read Tree Layers"| GP
-    GP -->|"Return Proof Nodes Path"| User
-
-    %% Process 4.0 Flows
-    User -->|"Target Item & Proof"| VP
-    D2 -->|"Fetch Expected Root"| CMP
-    VP -->|"Recomputed Root Hash"| CMP
-    CMP -->|"Proof Result: PASS / FAIL"| User
-
-    %% Process 5.0 Flows
-    User -->|"Input Tampered Value"| TP
-    D1 -->|"Original Transactions"| TP
-    TP --> TR
-    D2 -->|"Fetch Original Root"| TC
-    TR -->|"Tampered Root"| TC
-    TC -->|"Tamper Detected Verdict & Divergence"| User
-```
+### Key Architectural Flow:
+1. **1.0 Input Validation**: Validates raw transactions against `^[0-9]+$` regex and ensures count $\ge 8$, storing valid records into `D1: Transactions List`.
+2. **2.0 Tree Construction**: Reads transactions from `D1`, calculates SHA-256 leaf hashes, duplicates the last node if the count is odd (Bitcoin protocol), and iteratively computes pairwise parent hashes up to the Merkle Root stored in `D2`.
+3. **3.0 Proof Generator**: Extracts the required sibling audit path (`ProofNode` with `'L'` / `'R'` orientation) for a chosen leaf index.
+4. **4.0 Proof Verifier**: Recomputes the branch hash iteratively from target transaction + proof and verifies against expected root in `D2` (`PASS` / `FAIL`).
+5. **5.0 Tamper Detector**: Replaces a transaction at a target index with a modified value, recalculates a new Merkle tree, and proves divergence (`originalRoot != newRoot`).
 
 ---
 
